@@ -4,7 +4,6 @@
 // It is a work in progress, the API is not frozen.
 // We're trying to catchup with the last draft of the protocol:
 // http://tools.ietf.org/html/draft-ietf-appsawg-webfinger-14
-// and to support the http://webfist.org
 //
 // Example:
 //
@@ -120,11 +119,6 @@ type Client struct {
 	// HTTP client used to perform WebFinger lookups.
 	client *http.Client
 
-	// WebFistServer is the host used for issuing WebFist queries when standard
-	// WebFinger lookup fails.  If set to the empty string, queries will not fall
-	// back to the WebFist protocol.
-	WebFistServer string
-
 	// Allow the use of HTTP endoints for lookups.  The WebFinger spec requires
 	// all lookups be performed over HTTPS, so this should only ever be enabled
 	// for development.
@@ -133,8 +127,7 @@ type Client struct {
 
 // DefaultClient is the default Client and is used by Lookup.
 var DefaultClient = &Client{
-	client:        http.DefaultClient,
-	WebFistServer: webFistDefaultServer,
+	client: http.DefaultClient,
 }
 
 // Lookup returns the JRD for the specified identifier.
@@ -145,15 +138,13 @@ func Lookup(identifier string, rels []string) (*jrd.JRD, error) {
 }
 
 // NewClient returns a new WebFinger Client.  If a nil http.Client is provied,
-// http.DefaultClient will be used.  New Clients will use the default WebFist
-// host if WebFinger lookup fails.
+// http.DefaultClient will be used.
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 	return &Client{
-		client:        httpClient,
-		WebFistServer: webFistDefaultServer,
+		client: httpClient,
 	}
 }
 
@@ -177,17 +168,7 @@ func (c *Client) LookupResource(resource *Resource, rels []string) (*jrd.JRD, er
 
 	resourceJRD, err := c.fetchJRD(resource.JRDURL("", rels))
 	if err != nil {
-		log.Print(err)
-
-		// Fallback to WebFist protocol
-		if c.WebFistServer != "" {
-			log.Print("Falling back to WebFist protocol")
-			resourceJRD, err = c.webfistLookup(resource)
-		}
-
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return resourceJRD, nil
