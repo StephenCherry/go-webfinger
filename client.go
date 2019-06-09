@@ -43,8 +43,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/ant0ine/go-webfinger/jrd"
 )
 
 // Resource is a resource for which a WebFinger query can be issued.
@@ -133,7 +131,7 @@ var DefaultClient = &Client{
 // Lookup returns the JRD for the specified identifier.
 //
 // Lookup is a wrapper around DefaultClient.Lookup.
-func Lookup(identifier string, rels []string) (*jrd.JRD, error) {
+func Lookup(identifier string, rels []string) (*JRD, error) {
 	return DefaultClient.Lookup(identifier, rels)
 }
 
@@ -151,7 +149,7 @@ func NewClient(httpClient *http.Client) *Client {
 // Lookup returns the JRD for the specified identifier.  If provided, only the
 // specified rel values will be requested, though WebFinger servers are not
 // obligated to respect that request.
-func (c *Client) Lookup(identifier string, rels []string) (*jrd.JRD, error) {
+func (c *Client) Lookup(identifier string, rels []string) (*JRD, error) {
 	resource, err := Parse(identifier)
 	if err != nil {
 		return nil, err
@@ -163,7 +161,7 @@ func (c *Client) Lookup(identifier string, rels []string) (*jrd.JRD, error) {
 // LookupResource returns the JRD for the specified Resource.  If provided,
 // only the specified rel values will be requested, though WebFinger servers
 // are not obligated to respect that request.
-func (c *Client) LookupResource(resource *Resource, rels []string) (*jrd.JRD, error) {
+func (c *Client) LookupResource(resource *Resource, rels []string) (*JRD, error) {
 	log.Printf("Looking up WebFinger data for %s", resource)
 
 	resourceJRD, err := c.fetchJRD(resource.JRDURL("", rels))
@@ -174,7 +172,7 @@ func (c *Client) LookupResource(resource *Resource, rels []string) (*jrd.JRD, er
 	return resourceJRD, nil
 }
 
-func (c *Client) fetchJRD(jrdURL *url.URL) (*jrd.JRD, error) {
+func (c *Client) fetchJRD(jrdURL *url.URL) (*JRD, error) {
 	// TODO verify signature if not https
 	// TODO extract http cache info
 
@@ -211,7 +209,7 @@ func (c *Client) fetchJRD(jrdURL *url.URL) (*jrd.JRD, error) {
 	ct := strings.ToLower(res.Header.Get("content-type"))
 	if strings.Contains(ct, "application/jrd+json") ||
 		strings.Contains(ct, "application/json") {
-		parsed, err := jrd.ParseJRD(content)
+		parsed, err := ParseJRD(content)
 		if err != nil {
 			return nil, err
 		}

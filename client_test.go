@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
-
-	"github.com/ant0ine/go-webfinger/jrd"
 )
 
 var (
@@ -160,7 +158,7 @@ func TestLookup(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error lookup up webfinger: %#v", err)
 	}
-	want := &jrd.JRD{Subject: "bob@example.com"}
+	want := &JRD{Subject: "bob@example.com"}
 	if !reflect.DeepEqual(JRD, want) {
 		t.Errorf("Lookup returned %#v, want %#v", JRD, want)
 	}

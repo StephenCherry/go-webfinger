@@ -1,8 +1,8 @@
-// Package jrd provides a simple JRD parser.
+// Provides a simple JRD parser.
 //
 // Following this JRD spec: http://tools.ietf.org/html/draft-ietf-appsawg-webfinger-14#section-4.4
-//
-package jrd
+
+package webfinger
 
 import (
 	"encoding/json"
