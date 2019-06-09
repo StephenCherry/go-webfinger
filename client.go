@@ -121,6 +121,9 @@ type Client struct {
 	// all lookups be performed over HTTPS, so this should only ever be enabled
 	// for development.
 	AllowHTTP bool
+
+	// Logger used during webfinger fetching.
+	Logger *log.Logger
 }
 
 // DefaultClient is the default Client and is used by Lookup.
@@ -162,7 +165,7 @@ func (c *Client) Lookup(identifier string, rels []string) (*JRD, error) {
 // only the specified rel values will be requested, though WebFinger servers
 // are not obligated to respect that request.
 func (c *Client) LookupResource(resource *Resource, rels []string) (*JRD, error) {
-	log.Printf("Looking up WebFinger data for %s", resource)
+	c.logf("Looking up WebFinger data for %s", resource)
 
 	resourceJRD, err := c.fetchJRD(resource.JRDURL("", rels))
 	if err != nil {
@@ -177,7 +180,7 @@ func (c *Client) fetchJRD(jrdURL *url.URL) (*JRD, error) {
 	// TODO extract http cache info
 
 	// Get follows up to 10 redirects
-	log.Printf("GET %s", jrdURL.String())
+	c.logf("GET %s", jrdURL.String())
 	res, err := c.client.Get(jrdURL.String())
 	if err != nil {
 		errString := strings.ToLower(err.Error())
@@ -186,7 +189,7 @@ func (c *Client) fetchJRD(jrdURL *url.URL) (*JRD, error) {
 		if (strings.Contains(errString, "connection refused") ||
 			strings.Contains(errString, "ssl_certificate_error")) && c.AllowHTTP {
 			jrdURL.Scheme = "http"
-			log.Printf("GET %s", jrdURL.String())
+			c.logf("GET %s", jrdURL.String())
 			res, err = c.client.Get(jrdURL.String())
 			if err != nil {
 				return nil, err
@@ -217,4 +220,12 @@ func (c *Client) fetchJRD(jrdURL *url.URL) (*JRD, error) {
 	}
 
 	return nil, fmt.Errorf("invalid content-type: %s", ct)
+}
+
+func (c *Client) logf(format string, v ...interface{}) {
+	if c.Logger != nil {
+		c.Logger.Printf(format, v...)
+	} else {
+		log.Printf(format, v...)
+	}
 }
