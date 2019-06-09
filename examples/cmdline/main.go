@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/ant0ine/go-webfinger"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"webfinger.net/go/webfinger"
 )
 
 func printHelp() {

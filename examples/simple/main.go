@@ -3,8 +3,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/ant0ine/go-webfinger"
 	"os"
+
+	"webfinger.net/go/webfinger"
 )
 
 func main() {
