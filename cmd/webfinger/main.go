@@ -1,6 +1,4 @@
-// TODO
-// * improve JRD output
-// * do stuff with the JRD
+// The webfinger tool is a command line client for performing webfinger lookups.
 package main
 
 import (
@@ -14,51 +12,41 @@ import (
 	"webfinger.net/go/webfinger"
 )
 
-func printHelp() {
-	fmt.Println("webfinger [-vh] <resource uri>")
+var (
+	verbose = flag.Bool("v", false, "print details about the resolution")
+)
+
+func usage() {
+	fmt.Println("webfinger [-v] <resource uri>")
 	flag.PrintDefaults()
-	fmt.Println("example: webfinger -v bob@example.com") // same Bob as in the draft
+	fmt.Println("\nexample: webfinger -v bob@example.com") // same Bob as in the draft
 }
 
 func main() {
-
-	// cmd line flags
-	verbose := flag.Bool("v", false, "print details about the resolution")
-	help := flag.Bool("h", false, "display this message")
+	flag.Usage = usage
 	flag.Parse()
 
-	if *help {
-		printHelp()
-		os.Exit(0)
-	}
-
-	if !*verbose {
-		log.SetOutput(ioutil.Discard)
-	}
-
-	email := flag.Arg(0)
-
-	if email == "" {
-		printHelp()
+	resource := flag.Arg(0)
+	if resource == "" {
+		flag.Usage()
 		os.Exit(1)
 	}
 
 	log.SetFlags(0)
+	if !*verbose {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	client := webfinger.NewClient(nil)
 	client.AllowHTTP = true
 
-	jrd, err := client.Lookup(email, nil)
+	jrd, err := client.Lookup(resource, nil)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	bytes, err := json.MarshalIndent(jrd, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", bytes)
-
-	os.Exit(0)
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.Encode(jrd)
 }
