@@ -44,6 +44,13 @@ func teardown() {
 	server.Close()
 }
 
+func TestNewClient_EmptyClient(t *testing.T) {
+	client := NewClient(nil)
+	if client.client != http.DefaultClient {
+		t.Errorf("NewClient(nil) did not use http.DefaultClient")
+	}
+}
+
 func TestResource_Parse(t *testing.T) {
 	// URL with host
 	r, err := Parse("http://example.com/")

@@ -5,7 +5,6 @@ import (
 )
 
 func TestParseJRD(t *testing.T) {
-
 	// Adapted from spec http://tools.ietf.org/html/rfc6415#appendix-A
 	blob := `
         {
@@ -53,12 +52,19 @@ func TestParseJRD(t *testing.T) {
 	if got, want := obj.Subject, "http://blog.example.com/article/id/314"; got != want {
 		t.Errorf("JRD.Subject is %q, want %q", got, want)
 	}
+
+	// Properties
 	if got, want := obj.GetProperty("http://blgx.example.net/ns/version"), "1.3"; got != want {
 		t.Errorf("obj.GetProperty('http://blgx.example.net/ns/version') returned %q, want %q", got, want)
 	}
 	if got, want := obj.GetProperty("http://blgx.example.net/ns/ext"), ""; got != want {
 		t.Errorf("obj.GetProperty('http://blgx.example.net/ns/ext') returned %q, want %q", got, want)
 	}
+	if got, want := obj.GetProperty("does-not-exist"), ""; got != want {
+		t.Errorf("obj.GetProperty('does-not-exist') returned %q, want %q", got, want)
+	}
+
+	// Links
 	if obj.GetLinkByRel("copyright") == nil {
 		t.Error("obj.GetLinkByRel('copyright') returned nil, want non-nil value")
 	}
@@ -67,5 +73,15 @@ func TestParseJRD(t *testing.T) {
 	}
 	if got, want := obj.GetLinkByRel("author").GetProperty("http://example.com/role"), "editor"; got != want {
 		t.Errorf("obj.GetLinkByRel('author').GetProperty('http://example.com/role') returned %q, want %q", got, want)
+	}
+	if got, want := obj.GetLinkByRel("does-not-exist"), (*Link)(nil); got != want {
+		t.Errorf("obj.GetLinkByRel('does-not-exist') returned %q, want %q", got, want)
+	}
+}
+
+func TestParseJRD_error(t *testing.T) {
+	_, err := ParseJRD([]byte("`"))
+	if err == nil {
+		t.Errorf("ParseJRD(`) did not return expected error")
 	}
 }
