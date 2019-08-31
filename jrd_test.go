@@ -77,6 +77,9 @@ func TestParseJRD(t *testing.T) {
 	if got, want := obj.GetLinkByRel("does-not-exist"), (*Link)(nil); got != want {
 		t.Errorf("obj.GetLinkByRel('does-not-exist') returned %q, want %q", got, want)
 	}
+	if got, want := obj.GetLinkByRel("author").GetProperty("does-not-exist"), ""; got != want {
+		t.Errorf("obj.GetLinkByRel('author').GetProperty('does-not-exist') returned %q, want %q", got, want)
+	}
 }
 
 func TestParseJRD_error(t *testing.T) {
