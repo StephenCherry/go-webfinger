@@ -106,31 +106,11 @@ func TestResource_WebFingerHost(t *testing.T) {
 
 func TestResource_JRDURL(t *testing.T) {
 	r, _ := Parse("bob@example.com")
-	got := r.JRDURL("", nil)
+	got := r.JRDURL([]string{"a", "b"})
 	want, _ := url.Parse("https://example.com/.well-known/webfinger?" +
-		"resource=acct%3Abob%40example.com")
+		"rel=a&rel=b&resource=acct%3Abob%40example.com")
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("JRDURL() returned: %#v, want %#v", got, want)
-	}
-
-	r, _ = Parse("http://example.com/")
-	got = r.JRDURL("example.net", []string{"a", "b"})
-	// sadly, we have to compare each URL component individually because the
-	// order of query string values is unpredictable
-	if want := "https"; got.Scheme != want {
-		t.Errorf("JRDURL() returned scheme: %#v, want %#v", got.Scheme, want)
-	}
-	if want := "example.net"; got.Host != want {
-		t.Errorf("JRDURL() returned host: %#v, want %#v", got.Host, want)
-	}
-	if want := "/.well-known/webfinger"; got.Path != want {
-		t.Errorf("JRDURL() returned path: %#v, want %#v", got.Path, want)
-	}
-	if want := []string{"http://example.com/"}; reflect.DeepEqual(got.Query().Get("resource"), want) {
-		t.Errorf("JRDURL() returned query resource: %#v, want %#v", got.Query().Get("resource"), want)
-	}
-	if want := []string{"a", "b"}; reflect.DeepEqual(got.Query().Get("rel"), want) {
-		t.Errorf("JRDURL() returned query rel: %#v, want %#v", got.Query().Get("rel"), want)
 	}
 }
 
@@ -154,13 +134,13 @@ func TestLookup(t *testing.T) {
 		fmt.Fprint(w, `{"subject":"bob@example.com"}`)
 	})
 
-	JRD, err := client.Lookup("bob@"+testHost, nil)
+	jrd, err := client.Lookup("bob@"+testHost, nil)
 	if err != nil {
-		t.Errorf("Unexpected error lookup up webfinger: %#v", err)
+		t.Errorf("Unexpected error lookup up webfinger: %v", err)
 	}
 	want := &JRD{Subject: "bob@example.com"}
-	if !reflect.DeepEqual(JRD, want) {
-		t.Errorf("Lookup returned %#v, want %#v", JRD, want)
+	if !reflect.DeepEqual(jrd, want) {
+		t.Errorf("Lookup returned %#v, want %#v", jrd, want)
 	}
 }
 

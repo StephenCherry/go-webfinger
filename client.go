@@ -94,17 +94,12 @@ func (r *Resource) String() string {
 	return u.String()
 }
 
-// JRDURL returns the WebFinger query URL at the specified host for this
-// resource.  If host is an empty string, the default host for the resource
-// will be used, as returned from WebFingerHost().
-func (r *Resource) JRDURL(host string, rels []string) *url.URL {
-	if host == "" {
-		host = r.WebFingerHost()
-	}
-
+// JRDURL returns the WebFinger query URL for this resource. If rels is
+// specified, it will be included in the query URL.
+func (r *Resource) JRDURL(rels []string) *url.URL {
 	return &url.URL{
 		Scheme: "https",
-		Host:   host,
+		Host:   r.WebFingerHost(),
 		Path:   "/.well-known/webfinger",
 		RawQuery: url.Values{
 			"resource": []string{r.String()},
@@ -168,7 +163,7 @@ func (c *Client) Lookup(identifier string, rels []string) (*JRD, error) {
 func (c *Client) LookupResource(resource *Resource, rels []string) (*JRD, error) {
 	c.logf("Looking up WebFinger data for %s", resource)
 
-	resourceJRD, err := c.fetchJRD(resource.JRDURL("", rels))
+	resourceJRD, err := c.fetchJRD(resource.JRDURL(rels))
 	if err != nil {
 		return nil, err
 	}
