@@ -134,7 +134,7 @@ func TestLookup(t *testing.T) {
 		fmt.Fprint(w, `{"subject":"bob@example.com"}`)
 	})
 
-	jrd, err := client.Lookup("bob@"+testHost, nil)
+	jrd, err := client.Lookup("acct:bob@"+testHost, nil)
 	if err != nil {
 		t.Errorf("Unexpected error lookup up webfinger: %v", err)
 	}
