@@ -7,33 +7,29 @@
 //
 // Example:
 //
-//  package main
+//     package main
 //
-//  import (
-//          "fmt"
-//          "os"
+//     import (
+//             "fmt"
+//             "os"
 //
-//          "webfinger.net/go/webfinger"
-//  )
+//             "webfinger.net/go/webfinger"
+//     )
 //
-//  func main() {
-//          email := os.Args[1]
+//     func main() {
+//             email := os.Args[1]
 //
-//          client := webfinger.NewClient(nil)
+//             client := webfinger.NewClient(nil)
+//             client.AllowHTTP = true
 //
-//          resource, err := webfinger.MakeResource(email)
-//          if err != nil {
-//                  panic(err)
-//          }
+//             jrd, err := client.Lookup(email, nil)
+//             if err != nil {
+//                     fmt.Println(err)
+//                     return
+//             }
 //
-//          jrd, err := client.GetJRD(resource)
-//          if err != nil {
-//                  fmt.Println(err)
-//                  return
-//          }
-//
-//          fmt.Printf("JRD: %+v", jrd)
-//  }
+//             fmt.Printf("JRD: %+v", jrd)
+//     }
 package webfinger
 
 import (
