@@ -1,7 +1,7 @@
 # go-webfinger
 
 [![GoDoc](https://godoc.org/webfinger.net/go/webfinger?status.svg)](https://godoc.org/webfinger.net/go/webfinger)
-[![Build Status](https://travis-ci.org/webfinger/go-webfinger.svg?branch=master)](https://travis-ci.org/webfinger/go-webfinger)
+[![Test Status](https://github.com/webfinger/go-webfinger/workflows/tests/badge.svg)](https://github.com/webfinger/go-webfinger/actions?query=workflow%3Atests)
 [![Test Coverage](https://codecov.io/gh/webfinger/go-webfinger/branch/master/graph/badge.svg)](https://codecov.io/gh/webfinger/go-webfinger)
 
 go-webfinger is a Go client for the [Webfinger protocol](https://webfinger.net).
