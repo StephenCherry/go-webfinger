@@ -24,6 +24,7 @@ type Link struct {
 	Href       string                 `json:"href,omitempty"`
 	Titles     map[string]string      `json:"titles,omitempty"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
+	Template   string                 `json:"template,omitempty"`
 }
 
 // ParseJRD parses the JRD using json.Unmarshal.
