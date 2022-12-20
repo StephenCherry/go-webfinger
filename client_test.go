@@ -6,31 +6,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"testing"
-)
 
-var (
-	// mux is the HTTP request multiplexer used with the test server.
-	mux *http.ServeMux
-
-	// server is a test HTTP server used to provide mock API responses.
-	server *httptest.Server
-
-	// testHost is the hostname and port of the local running test server.
-	testHost string
-
-	// client is the WebFinger client being tested.
-	client *Client
+	"github.com/google/go-cmp/cmp"
 )
 
 // setup a local HTTP server for testing
-func setup() {
+func setup() (client *Client, mux *http.ServeMux, host string, teardown func()) {
 	// test server
 	mux = http.NewServeMux()
-	server = httptest.NewTLSServer(mux)
+	server := httptest.NewTLSServer(mux)
 	u, _ := url.Parse(server.URL)
-	testHost = u.Host
 
 	// for testing, use an HTTP client which doesn't check certs
 	client = NewClient(&http.Client{
@@ -38,10 +24,7 @@ func setup() {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	})
-}
-
-func teardown() {
-	server.Close()
+	return client, mux, u.Host, server.Close
 }
 
 func TestNewClient_EmptyClient(t *testing.T) {
@@ -52,24 +35,24 @@ func TestNewClient_EmptyClient(t *testing.T) {
 }
 
 func TestResource_Parse(t *testing.T) {
-	// URL with host
-	r, err := Parse("http://example.com/")
-	if err != nil {
-		t.Errorf("Unexpected error: %#v", err)
-	}
-	want := &Resource{Scheme: "http", Host: "example.com", Path: "/"}
-	if !reflect.DeepEqual(r, want) {
-		t.Errorf("Parsed resource: %#v, want %#v", r, want)
+	tests := []struct {
+		input string
+		want  *Resource
+	}{
+		// URL with host
+		{"http://example.com/", &Resource{Scheme: "http", Host: "example.com", Path: "/"}},
+		// email-like identifier
+		{"bob@example.com", &Resource{Scheme: "acct", Opaque: "bob@example.com"}},
 	}
 
-	// email-like identifier
-	r, err = Parse("bob@example.com")
-	if err != nil {
-		t.Errorf("Unexpected error: %#v", err)
-	}
-	want = &Resource{Scheme: "acct", Opaque: "bob@example.com"}
-	if !reflect.DeepEqual(r, want) {
-		t.Errorf("Parsed resource: %#v, want %#v", r, want)
+	for _, tt := range tests {
+		got, err := Parse(tt.input)
+		if err != nil {
+			t.Errorf("Parse(%q) returned error: %v", tt.input, err)
+		}
+		if !cmp.Equal(got, tt.want) {
+			t.Errorf("Parse(%q) returned %#v, want %#v", tt.input, got, tt.want)
+		}
 	}
 }
 
@@ -86,28 +69,26 @@ func TestResource_Parse_error(t *testing.T) {
 }
 
 func TestResource_WebFingerHost(t *testing.T) {
-	// URL with host
-	r, _ := Parse("http://example.com/")
-	if got, want := r.WebFingerHost(), "example.com"; got != want {
-		t.Errorf("WebFingerHost() returned: %#v, want %#v", got, want)
+	tests := []struct {
+		input string
+		want  string
+	}{
+		// URL with host
+		{"http://example.com/", "example.com"},
+		// emai-like identifier
+		{"bob@example.com", "example.com"},
+		// mailto URL
+		{"mailto:bob@example.com", "example.com"},
+		// URL with no host
+		{"file:///example", ""},
 	}
 
-	// email-like identifier
-	r, _ = Parse("bob@example.com")
-	if got, want := r.WebFingerHost(), "example.com"; got != want {
-		t.Errorf("WebFingerHost() returned: %#v, want %#v", got, want)
-	}
-
-	// mailto URL
-	r, _ = Parse("mailto:bob@example.com")
-	if got, want := r.WebFingerHost(), "example.com"; got != want {
-		t.Errorf("WebFingerHost() returned: %#v, want %#v", got, want)
-	}
-
-	// URL with no host
-	r, _ = Parse("file:///example")
-	if got, want := r.WebFingerHost(), ""; got != want {
-		t.Errorf("WebFingerHost() returned: %#v, want %#v", got, want)
+	for _, tt := range tests {
+		r, _ := Parse(tt.input)
+		got := r.WebFingerHost()
+		if !cmp.Equal(got, tt.want) {
+			t.Errorf("WebFingerHost(%q) returned %#v, want %#v", tt.input, got, tt.want)
+		}
 	}
 }
 
@@ -116,7 +97,7 @@ func TestResource_JRDURL(t *testing.T) {
 	got := r.JRDURL([]string{"a", "b"})
 	want, _ := url.Parse("https://example.com/.well-known/webfinger?" +
 		"rel=a&rel=b&resource=acct%3Abob%40example.com")
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("JRDURL() returned: %#v, want %#v", got, want)
 	}
 }
@@ -129,24 +110,24 @@ func TestResource_String(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-	setup()
+	client, mux, host, teardown := setup()
 	defer teardown()
 
 	mux.HandleFunc("/.well-known/webfinger", func(w http.ResponseWriter, r *http.Request) {
 		resource := r.FormValue("resource")
-		if want := "acct:bob@" + testHost; resource != want {
+		if want := "acct:bob@" + host; resource != want {
 			t.Errorf("Requested resource: %v, want %v", resource, want)
 		}
 		w.Header().Add("content-type", "application/jrd+json")
 		fmt.Fprint(w, `{"subject":"bob@example.com"}`)
 	})
 
-	jrd, err := client.Lookup("acct:bob@"+testHost, nil)
+	jrd, err := client.Lookup("acct:bob@"+host, nil)
 	if err != nil {
 		t.Errorf("Unexpected error lookup up webfinger: %v", err)
 	}
 	want := &JRD{Subject: "bob@example.com"}
-	if !reflect.DeepEqual(jrd, want) {
+	if !cmp.Equal(jrd, want) {
 		t.Errorf("Lookup returned %#v, want %#v", jrd, want)
 	}
 }
@@ -160,10 +141,10 @@ func TestLookup_parseError(t *testing.T) {
 }
 
 func TestLookup_404(t *testing.T) {
-	setup()
+	client, _, host, teardown := setup()
 	defer teardown()
 
-	_, err := client.Lookup("bob@"+testHost, nil)
+	_, err := client.Lookup("bob@"+host, nil)
 	if err == nil {
 		t.Error("Expected error")
 	}
