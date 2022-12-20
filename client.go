@@ -7,29 +7,29 @@
 //
 // Example:
 //
-//     package main
+//	package main
 //
-//     import (
-//             "fmt"
-//             "os"
+//	import (
+//	        "fmt"
+//	        "os"
 //
-//             "webfinger.net/go/webfinger"
-//     )
+//	        "webfinger.net/go/webfinger"
+//	)
 //
-//     func main() {
-//             email := os.Args[1]
+//	func main() {
+//	        email := os.Args[1]
 //
-//             client := webfinger.NewClient(nil)
-//             client.AllowHTTP = true
+//	        client := webfinger.NewClient(nil)
+//	        client.AllowHTTP = true
 //
-//             jrd, err := client.Lookup(email, nil)
-//             if err != nil {
-//                     fmt.Println(err)
-//                     return
-//             }
+//	        jrd, err := client.Lookup(email, nil)
+//	        if err != nil {
+//	                fmt.Println(err)
+//	                return
+//	        }
 //
-//             fmt.Printf("JRD: %+v", jrd)
-//     }
+//	        fmt.Printf("JRD: %+v", jrd)
+//	}
 package webfinger
 
 import (
@@ -201,17 +201,7 @@ func (c *Client) fetchJRD(jrdURL *url.URL) (*JRD, error) {
 		return nil, err
 	}
 
-	ct := strings.ToLower(res.Header.Get("content-type"))
-	if strings.Contains(ct, "application/jrd+json") ||
-		strings.Contains(ct, "application/json") {
-		parsed, err := ParseJRD(content)
-		if err != nil {
-			return nil, err
-		}
-		return parsed, nil
-	}
-
-	return nil, fmt.Errorf("invalid content-type: %s", ct)
+	return ParseJRD(content)
 }
 
 func (c *Client) logf(format string, v ...interface{}) {
