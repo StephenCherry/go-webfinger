@@ -2,48 +2,51 @@ package webfinger
 
 import (
 	"testing"
+	"time"
 )
 
 func TestParseJRD(t *testing.T) {
-	// Adapted from spec http://tools.ietf.org/html/rfc6415#appendix-A
+	// Example JRD from http://tools.ietf.org/html/rfc6415#appendix-A
 	blob := `
+    {
+      "subject":"http://blog.example.com/article/id/314",
+      "expires":"2010-01-30T09:30:00Z",
+
+      "aliases":[
+        "http://blog.example.com/cool_new_thing",
+        "http://blog.example.com/steve/article/7"],
+
+      "properties":{
+        "http://blgx.example.net/ns/version":"1.3",
+        "http://blgx.example.net/ns/ext":null
+      },
+
+      "links":[
         {
-              "subject":"http://blog.example.com/article/id/314",
-
-              "aliases":[
-                "http://blog.example.com/cool_new_thing",
-                "http://blog.example.com/steve/article/7"],
-
-              "properties":{
-                "http://blgx.example.net/ns/version":"1.3",
-                "http://blgx.example.net/ns/ext":null
-              },
-
-              "links":[
-                {
-                  "rel":"author",
-                  "type":"text/html",
-                  "href":"http://blog.example.com/author/steve",
-                  "titles":{
-                    "default":"About the Author",
-                    "en-us":"Author Information"
-                  },
-                  "properties":{
-                    "http://example.com/role":"editor"
-                  }
-                },
-                {
-                  "rel":"author",
-                  "href":"http://example.com/author/john",
-                  "titles":{
-                    "default":"The other author"
-                  }
-                },
-                {
-                  "rel":"copyright"
-                }
-              ]
-            }
+          "rel":"author",
+          "type":"text/html",
+          "href":"http://blog.example.com/author/steve",
+          "titles":{
+            "default":"About the Author",
+            "en-us":"Author Information"
+          },
+          "properties":{
+            "http://example.com/role":"editor"
+          }
+        },
+        {
+          "rel":"author",
+          "href":"http://example.com/author/john",
+          "titles":{
+            "default":"The other author"
+          }
+        },
+        {
+          "rel":"copyright",
+          "template":"http://example.com/copyright?id={uri}"
+        }
+      ]
+    }
         `
 	obj, err := ParseJRD([]byte(blob))
 	if err != nil {
@@ -51,6 +54,9 @@ func TestParseJRD(t *testing.T) {
 	}
 	if got, want := obj.Subject, "http://blog.example.com/article/id/314"; got != want {
 		t.Errorf("JRD.Subject is %q, want %q", got, want)
+	}
+	if got, want := obj.Expires, time.Date(2010, 01, 30, 9, 30, 0, 0, time.UTC); got != want {
+		t.Errorf("JRD.Expires is %q, want %q", got, want)
 	}
 
 	// Properties
@@ -67,6 +73,9 @@ func TestParseJRD(t *testing.T) {
 	// Links
 	if obj.GetLinkByRel("copyright") == nil {
 		t.Error("obj.GetLinkByRel('copyright') returned nil, want non-nil value")
+	}
+	if got, want := obj.GetLinkByRel("copyright").Template, "http://example.com/copyright?id={uri}"; got != want {
+		t.Errorf("obj.GetLinkByRel('copyright').Template returned %q, want %q", got, want)
 	}
 	if got, want := obj.GetLinkByRel("author").Titles["default"], "About the Author"; got != want {
 		t.Errorf("obj.GetLinkByRel('author').Titles['default'] returned %q, want %q", got, want)

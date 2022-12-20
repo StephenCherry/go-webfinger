@@ -6,12 +6,14 @@ package webfinger
 
 import (
 	"encoding/json"
+	"time"
 )
 
 // JRD is a JSON Resource Descriptor, specifying properties and related links
 // for a resource.
 type JRD struct {
 	Subject    string                 `json:"subject,omitempty"`
+	Expires    time.Time              `json:"expires,omitempty"`
 	Aliases    []string               `json:"aliases,omitempty"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
 	Links      []Link                 `json:"links,omitempty"`
