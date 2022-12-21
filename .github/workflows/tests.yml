@@ -1,32 +1,28 @@
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
 name: tests
-env:
-  GO111MODULE: on
 
 jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.12.x, 1.13.x]
-        platform: [ubuntu-latest, windows-latest]
+        go-version: [1.x, 1.18.x]
+        platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/setup-go@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
-    - uses: actions/checkout@v2
-
-    - name: Cache go modules
-      uses: actions/cache@v1.1.0
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+        cache: true
 
     - name: Run go fmt
-      if: runner.os != 'Windows'
       run: diff -u <(echo -n) <(gofmt -d -s .)
 
     - name: Run go vet
@@ -36,6 +32,6 @@ jobs:
       run: go test -v -race -coverprofile coverage.txt -covermode atomic ./...
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
