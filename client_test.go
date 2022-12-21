@@ -81,6 +81,9 @@ func TestResource_WebFingerHost(t *testing.T) {
 		{"mailto:bob@example.com", "example.com"},
 		// URL with no host
 		{"file:///example", ""},
+		// Email style local account
+		{"acct:juliet%40capulet.example@shoppingsite.example", "shoppingsite.example"},
+		{"acct:juliet@capulet.example@shoppingsite.example", "shoppingsite.example"},
 	}
 
 	for _, tt := range tests {

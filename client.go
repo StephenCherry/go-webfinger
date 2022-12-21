@@ -76,9 +76,9 @@ func (r *Resource) WebFingerHost() string {
 	if r.Host != "" {
 		return r.Host
 	} else if r.Scheme == "acct" || r.Scheme == "mailto" {
-		parts := strings.SplitN(r.Opaque, "@", 2)
-		if len(parts) == 2 {
-			return parts[1]
+		at := strings.LastIndex(r.Opaque, "@")
+		if at != -1 {
+			return r.Opaque[at+1:]
 		}
 	}
 	return ""
