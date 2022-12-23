@@ -13,7 +13,7 @@ import (
 // for a resource.
 type JRD struct {
 	Subject    string                 `json:"subject,omitempty"`
-	Expires    time.Time              `json:"expires,omitempty"`
+	Expires    *time.Time             `json:"expires,omitempty"`
 	Aliases    []string               `json:"aliases,omitempty"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
 	Links      []Link                 `json:"links,omitempty"`

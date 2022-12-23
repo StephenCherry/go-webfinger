@@ -3,6 +3,8 @@ package webfinger
 import (
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseJRD(t *testing.T) {
@@ -55,7 +57,8 @@ func TestParseJRD(t *testing.T) {
 	if got, want := obj.Subject, "http://blog.example.com/article/id/314"; got != want {
 		t.Errorf("JRD.Subject is %q, want %q", got, want)
 	}
-	if got, want := obj.Expires, time.Date(2010, 01, 30, 9, 30, 0, 0, time.UTC); got != want {
+	expires := time.Date(2010, 01, 30, 9, 30, 0, 0, time.UTC)
+	if got, want := obj.Expires, &expires; !cmp.Equal(got, want) {
 		t.Errorf("JRD.Expires is %q, want %q", got, want)
 	}
 
